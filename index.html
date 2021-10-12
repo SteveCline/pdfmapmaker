@@ -17,7 +17,6 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
 <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css">
-<!-- <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css"> -->
 <style>
     body { 
         margin: 0;
@@ -38,6 +37,9 @@
     }
     input[type=checkbox] {
         margin: 0 0.5em;
+    }
+    li {
+        margin-bottom: 8px;
     }
     select {
         width: 100%;
@@ -288,20 +290,6 @@
     #open-layers-panel:hover {
         background: #3080f2;
     }
-    #layers-help {
-        color: #fff;
-        background: #38f;
-        font-size: 24px;
-        width: 26px;
-        height: 26px;
-        text-align: center;
-        border-radius: 50%;
-        float: right;
-        cursor: pointer;
-    }
-    #layers-help:hover {
-        background: #3080f2;
-    }
     .mapboxgl-ctrl-scale {
         color: #000;
         border: 2px solid #000;
@@ -362,10 +350,19 @@
 
 <div id="open-layers-panel" title="Open Layers Panel">Layers</div>
 <div id="sidebar">
-    <h2>Layers<div id="layers-help" title="Layers Help">?</div></h2>
+    <h2>Layers</h2>
     <label>Drag or Browse for geoJSON file(s)</label>
     <input type="file" id="load-data" class="input bottom-margin" accept=".json,.geojson" multiple>
-    <div id="layer-container"></div>
+    <div id="layer-container">
+        <ul id="layers-help">
+            <li>Layer = geoJSON feature collection</li>
+            <li>Accepts geoJSON files (.json & .geojson)</li>
+            <li>Use <a href="https://vector.rocks/" target="_blank">Vector.rocks</a> to create & download</li>
+            <li>Can label features from property values</li>
+            <li>PDF Map Maker expects each layer to have the same geometry type for all features</li>
+            <li>Shapefile? Use <a href="https://ogre.adc4gis.com/" target="_blank">Ogre web client</a> to convert</li>
+        </ul>
+    </div>
 </div>
 
 <main id="main">
@@ -455,26 +452,11 @@
 		</div>
 	</div>
 </div>
-<!-- Layers Help Modal -->
-<div class="modal" id="layers-help-modal">
-	<div class="modal-body">
-		<div class="modal-head">Layers Help</div>
-		<div class="modal-content">
-            <h2>Layer = GeoJSON Feature Collection</h2>
-            <p>PDF Map Maker accepts geoJSON files. Much like traditional GIS data, PDF Map Maker expects all features to have the same geometry type in your geoJSON feature collection. If your geoJSON file has properties aka "attributes" in GIS speak, PDF Map Maker will detect them and you can label your features from the property values.</p>
-            <p>Draw some data? Use my free editor <a href="https://vector.rocks/" target="_blank">vector.rocks</a> to create and download your own geoJSON data to use with PDF Map Maker.</p>
-            <p>Have a shapefile? Use <a href="https://ogre.adc4gis.com/" target="_blank">Ogre web client</a> to convert shapefiles to geoJSON.</p>
-            <button class="close-modal">Close</button>
-		</div>
-	</div>
-</div>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
-<!-- <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script> -->
 <script src="assets/jspdf.js"></script>
 
 <script>
-const token = "pk.eyJ1Ijoic3RldmVjIiwiYSI6ImNrdW5mMDR3bTQxZGMydm56cjE3cXBrMm4ifQ.voV5ESfCC0W0d4rQwCOhKA";
 const map = new mapboxgl.Map({
     container: "map",
     style: "mapbox://styles/mapbox/streets-v11",
@@ -483,12 +465,11 @@ const map = new mapboxgl.Map({
     boxZoom: false,
     maxZoom: 21,
     minZoom: 1,
-    accessToken: token,
+    accessToken: "pk.eyJ1Ijoic3RldmVjIiwiYSI6ImNrdW5mMDR3bTQxZGMydm56cjE3cXBrMm4ifQ.voV5ESfCC0W0d4rQwCOhKA",
     preserveDrawingBuffer: true,
     attributionControl: false
 });
 map.addControl(new mapboxgl.NavigationControl({visualizePitch:true}),"top-left");
-//map.addControl(new MapboxGeocoder({accessToken:token,mapboxgl:mapboxgl,marker:false,collapsed:true}));
 
 function $(id){
     return document.querySelector(id);
@@ -606,10 +587,6 @@ function toggleLayersSidebar(){
 const logoIcon = $("#logo");
 logoIcon.addEventListener("click", function() {
     $("#about-modal").style.display = "block";
-});
-const layersHelp = $("#layers-help");
-layersHelp.addEventListener("click", function() {
-    $("#layers-help-modal").style.display = "block";
 });
 const buttonOpenLayersPanel = $("#open-layers-panel");
 buttonOpenLayersPanel.addEventListener("click", function() {
@@ -845,6 +822,9 @@ function addDefaultLayerToMap(fcName,geoType,geoJson,layerID){
 }
 
 function createLayerListItem(fcName,geoType,layerID){
+    if (layerContainer.hasChildNodes() && layerContainer.firstElementChild.id === "layers-help"){
+        layerContainer.innerHTML = "";
+    }
     const fcItem = document.createElement("fieldset");
     fcItem.id = layerID;
     const legendBlock = document.createElement("legend");
@@ -886,6 +866,7 @@ function createLayerListItem(fcName,geoType,layerID){
                 map.moveLayer(item.id);
             }
         });
+        hideFirstMoveArrow();
         updateLegend();
     });
     //REMOVE BUTTON
@@ -899,6 +880,7 @@ function createLayerListItem(fcName,geoType,layerID){
     fcItem.append(buttonMoveLayer,buttonRemoveLayer);
     layerContainer.insertBefore(fcItem,layerContainer.childNodes[0]);
     updateLegend();
+    hideFirstMoveArrow();
 };
 
 function removeOverlayLayer(element,layerID){
@@ -917,6 +899,7 @@ function removeOverlayLayer(element,layerID){
     });
     element.parentElement.remove();
     updateLegend();
+    hideFirstMoveArrow();
 }
 
 function updateLegend(){
@@ -1531,6 +1514,18 @@ function createPointLabelControls(element,layerID){
     div6.append(colorLabel,colorInput);
     //------------------------------- 
     container.append(div6,div2,div5,div4,div1,div3);
+}
+
+function hideFirstMoveArrow(){
+    const layersNodeList = layerContainer.childNodes;
+    layersNodeList.forEach(function(item,index){
+        if (index === 0){
+            item.childNodes[2].style.display = "none";
+        }
+        else {
+            item.childNodes[2].style.display = "";
+        }
+    });
 }
 
 const selectBasemap = $("#select-basemap");
