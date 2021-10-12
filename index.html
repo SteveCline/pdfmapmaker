@@ -932,7 +932,7 @@ function updateLegend(){
             const geoType = nodeList[index].childNodes[0].className;
             const label = nodeList[index].childNodes[0].innerText;
             if (geoType === "polygon"){
-                const strokeWidth = map.getPaintProperty(layerID + "-line-polygon","line-width");
+                let strokeWidth = map.getPaintProperty(layerID + "-line-polygon","line-width");
                 if (strokeWidth > 7){
                     strokeWidth = 7;
                 }
@@ -943,7 +943,7 @@ function updateLegend(){
             }
             else {
                 let radius = map.getPaintProperty(layerID + "-point","circle-radius");
-                const strokeWidthCircle = map.getPaintProperty(layerID + "-point","circle-stroke-width");
+                let strokeWidthCircle = map.getPaintProperty(layerID + "-point","circle-stroke-width");
                 if (radius > 7){
                     radius = 7;
                 }
