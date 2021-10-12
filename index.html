@@ -1742,7 +1742,7 @@ async function generatePDF(layout,orientation,pageHeight,pageWidth,title,subTitl
     const timeStamp = new Date();
     doc.setFontSize(5);
     doc.setTextColor("#aaaaaa");
-    doc.text("Created with PDF Map Maker on: " + timeStamp,pageWidth - 0.4,pageHeight - 0.5,{angle:90});
+    doc.text("Created with pdfmapmaker.com on: " + timeStamp,pageWidth - 0.4,pageHeight - 0.5,{angle:90});
     doc.save(title.trim() + ".pdf");
 };
 
