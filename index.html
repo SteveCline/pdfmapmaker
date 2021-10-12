@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PDF Map Maker</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="description" content="PDF Map Maker is the web's best professional PDF map making tool for creating simple custom maps for print." />
+<meta name="keywords" content="PDF Map Maker,Map Maker,Print Map,PDF Map, Print Map Maker" />
+<meta name="author" content="Stephen Cline" />
+<meta property="og:title" content="PDF Map Maker">
+<meta property="og:description" content="PDF Map Maker is the web's best professional PDF map making tool for creating simple custom maps for print.">
+<!-- <meta property="og:image" content=> -->
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<!-- <meta property="og:url" content=> -->
+<meta property="og:site_name" content="PDF Map Maker">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css">
+<!-- <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css"> -->
+<style>
+    body { 
+        margin: 0;
+        padding: 0;
+        font-size: 16px;
+        background: #eee;
+        font-family: Arial,Helvetica,sans-serif;
+    }
+    h2 {
+        margin-top: 0;
+    }
+    input[type=color] {
+        display: block;
+    }
+    input[type=range] {
+        width: 100%;
+        margin-top: 6px;
+    }
+    input[type=checkbox] {
+        margin: 0 0.5em;
+    }
+    select {
+        width: 100%;
+    }
+    a:link, a:visited {
+    color: #38f;
+    }
+    a:hover {
+        color: #3080f2;
+    }
+    a:active {
+        color: #155bbf;
+    }
+    .input {
+        background: #fff;
+        padding: 0.5em;
+        border: 2px solid #ccc;
+        box-sizing: border-box;
+        border-radius: 0.2em;
+        display: block;
+    }
+    .bottom-margin {
+        margin-bottom: 1em;
+        width: 100%;
+    }
+    .input:focus {
+        border: 2px solid #38f;
+        box-shadow: 0px 0px 0px 3px rgba(51, 136, 255, 0.2);
+        outline: none;
+    }
+    button {
+        background-color: #38f;
+        border: none;
+        font-size: 12px;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 0.2em;
+        padding: 1em 2em;
+    }
+    button:hover {
+        background-color: #3080f2;
+    }
+    fieldset {
+        border: 2px solid #38f;
+        position: relative;
+        border-radius: 0.2em;
+        padding: 1em;
+        margin: 1em;
+    }
+    legend {
+        color: #38f;
+        max-width: 240px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+    }
+    nav {
+        background-color: #ffffff;
+        display: grid;
+        grid-template-columns: max-content auto max-content;
+        grid-gap: 1em;
+        position: fixed;
+        top: 0;
+        width: calc(100% - 2em);
+        padding: 1em;
+        box-shadow: 0 2px 2px rgba(0,0,0,0.16);
+        z-index: 10;
+    }
+    .row {
+        display: inline-block;
+        padding-right: 0.5em;
+    }
+    .row:last-of-type {
+        padding-right: 0;
+    }
+    #page-container {
+        display: grid;
+        grid-template-columns: auto;
+        margin: auto;
+        margin-top: 150px;
+        margin-bottom: 150px;
+        background: #fff;
+        padding: 50px;
+        width: 750px;
+        box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+    }
+    .grid-item {
+        border-top: 3px solid #000;
+        border-left: 3px solid #000;
+        border-right: 3px solid #000;
+    }
+    .grid-item:last-of-type {
+        border-bottom: 3px solid #000;
+    }
+    #map {  
+        height: 847px;
+    }
+    #title-block {
+        height: 144px;
+        display: grid;
+        grid-template-columns: 1fr 1.75fr 1fr;
+    }
+    .title-block-item {
+        overflow: hidden;
+    }
+    .title-block-item:hover {
+        background-color: #eee;
+        cursor: pointer;
+    }
+    #north-arrow {
+        width: 90px;
+        float: right;
+        margin: 8px 10px 0 0;
+    }
+    .north-arrow {
+        width: 90px;
+        margin-right: 26px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .title-main {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 6px;
+    }
+    .title-body {
+        font-size: 16px;
+        height: 22px;
+        line-height: 22px;
+    }
+    .title-source {
+        font-size: 10px;
+        position: absolute;
+        bottom: 0;
+        text-align: center;
+        left: calc(50% - 74px);
+    }
+    .remove-button {
+        background-color: #e74c3c;
+        position: absolute;
+        right: -14px;
+        top: -24px;
+        padding: 0;
+        font-size: 16px;
+        line-height: 16px;
+        width: 26px;
+        height: 26px;
+    }
+    .remove-button:hover {
+        background-color: #db4332;
+    }
+    .move-button {
+        position: absolute;
+        right: 16px;
+        top: -24px;
+        padding: 0;
+        font-size: 16px;
+        line-height: 16px;
+        width: 26px;
+        height: 26px;
+    }
+    .modal {
+        display: none;
+        position: fixed; 
+        z-index: 1001; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%;
+        background-color: rgba(0,0,0,0.6); 
+        overflow: auto;
+    }
+    .modal-body {
+        background: #fff;
+        margin: auto;
+        margin-top: 100px;
+        margin-bottom: 50px;
+        width: 640px;
+        border-radius: 0.2em;
+        box-shadow: 2px 2px 2px rgba(0,0,0,0.16);
+    }
+    .modal-head {
+        background-color: #38f;
+        color: white;
+        border-top-left-radius: 0.2em;
+        border-top-right-radius: 0.2em;
+        padding: 1em;
+    }
+    .modal-content {
+        padding: 1em;
+    }
+    .grid-container {
+        display: grid;
+        grid-template-columns: 110px auto;
+        grid-gap: 1em;
+    }
+    .legend-item {
+        padding: 4px 0 0 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #sidebar {
+        position: fixed;
+        width: 368px;
+        z-index: 9;
+        height: calc(100% - 2em - 84px);
+        top: 84px;
+        left: -400px;
+        background-color: #fff;
+        overflow: auto;
+        padding: 1em;
+        transition: 0.3s;
+        box-shadow: 2px 0 2px rgba(0,0,0,0.16);
+    }
+    #main {
+        transition: 0.3s;
+    }
+    #logo {
+        color: #fff;
+        background-image: linear-gradient(45deg, #155bbf, #38f);
+        font-size: 16px;
+        font-weight: bold;
+        display: grid;
+        align-content: center;
+        padding: 0 10px;
+        border-top-right-radius: 1em;
+        cursor: pointer;
+    }
+    #open-layers-panel {
+        position: fixed;
+        color: #fff;
+        font-weight: bold;
+        font-size: 16px;
+        background: #38f;
+        background-image: linear-gradient(45deg, #155bbf, #38f);
+        top: 204px;
+        left: -18px;
+        padding: 10px;
+        z-index: 9;
+        border-radius: 0.2em 0.2em 0 0;
+        box-shadow: 2px -2px 2px rgb(0 0 0 / 20%);
+        transform: rotate(90deg);
+        transition: 0.3s;
+        cursor: pointer;
+    }
+    #open-layers-panel:hover {
+        background: #3080f2;
+    }
+    #layers-help {
+        color: #fff;
+        background: #38f;
+        font-size: 24px;
+        width: 26px;
+        height: 26px;
+        text-align: center;
+        border-radius: 50%;
+        float: right;
+        cursor: pointer;
+    }
+    #layers-help:hover {
+        background: #3080f2;
+    }
+    .mapboxgl-ctrl-scale {
+        color: #000;
+        border: 2px solid #000;
+        border-top: #000;
+        float: right;
+        margin-right: 15px;
+        margin-top: 12px;
+        text-align: right;
+        font-size: 12px;
+        background-color: transparent;
+    }
+</style>
+</head>
+<body>
+<nav>
+    <div id="logo" title="About PDF Map Maker">PDF<br>Map Maker</div>
+    <div>
+        <div class="row">
+            <label>Page Layout</label>
+            <select id="select-layout" class="input">
+                <option value="p-letter">Letter Portrait (8.5 x 11)</option>
+                <option value="l-letter">Letter Landscape (8.5 x 11)</option>
+                <option value="p-tabloid">Tabloid Portrait (11 x 17)</option>
+                <option value="l-tabloid">Tabloid Landscape (11 x 17)</option>
+            </select>
+        </div>
+        <div class="row">
+            <label>Basemap Style<input type="checkbox" id="checbox-3D" style="margin: 0 2px 0 10px;">3D</label>
+            <select id="select-basemap" class="input">
+                <option value="streets-v11">Streets</option>
+                <option value="outdoors-v11">Outdoors</option>
+                <option value="emerald-v8">Emerald</option>
+                <option value="light-v10">Light</option>
+                <option value="dark-v10">Dark</option>
+                <option value="navigation-day-v1">Traffic Day</option>
+                <option value="navigation-night-v1">Traffic Night</option>
+                <option value="satellite-streets-v11">Satellite & Labels</option>
+                <option value="satellite-v9">Satellite</option>
+            </select>
+        </div>
+        <div class="row">
+            <label>Zoom</label>
+            <input type="number" id="data-zoom" class="input" style="width: 80px;" step="0.1" min="1" max="21">
+        </div>
+        <div class="row">
+            <label>Pitch</label>
+            <input type="number" id="data-pitch" class="input" style="width: 80px;" step="1" min="0" max="85">
+        </div>
+        <div class="row">
+            <label>Bearing</label>
+            <input type="number" id="data-bearing" class="input" style="width: 80px;" step="1" min="-180" max="180">
+        </div>
+    </div>
+    <div>
+        <button id="dowload-map" style="font-size:16px;">Download Map</button>
+    </div>
+</nav>
+
+<div id="open-layers-panel" title="Open Layers Panel">Layers</div>
+<div id="sidebar">
+    <h2>Layers<div id="layers-help" title="Layers Help">?</div></h2>
+    <label>Drag or Browse for geoJSON file(s)</label>
+    <input type="file" id="load-data" class="input bottom-margin" accept=".json,.geojson" multiple>
+    <div id="layer-container"></div>
+</div>
+
+<main id="main">
+    <div id="page-container">
+        <div class="grid-item" id="map"></div>
+        <div class="grid-item" id="title-block">
+            <div class="title-block-item" id="title-block-legend" title="Layers"></div>
+            <div class="title-block-item" id="title-block-title" style="text-align:center;position:relative;" title="Title Block">
+                <div class="title-main" id="title-main">Title Block</div>
+                <div class="title-body" id="title-body-1"></div>
+                <div class="title-body" id="title-body-2"></div>
+                <div class="title-body" id="title-body-3"></div>
+                <div class="title-body" id="title-body-4"></div>
+                <div class="title-source">Source: Mapbox, OpenStreetMap</div>
+            </div>
+            <div class="title-block-item" id="title-block-north" title="North Arrow & Scale">
+                <img src="assets/northarrow1.png" id="north-arrow">
+                <div id="scale-bar"></div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- Title Modal -->
+<div class="modal" id="title-modal">
+	<div class="modal-body">
+		<div class="modal-head">Title Block</div>
+		<div class="modal-content">
+            <label>Main Title</label>
+            <input type="search" id="title-main-input" class="input bottom-margin" maxlength="40" autocomplete="off" placeholder="Enter Title Here...">
+            <label>Subtitle Line 1</label>
+            <input type="search" id="title-body-input-1" class="input bottom-margin" maxlength="40" autocomplete="off" placeholder="Optional Subtitle...">
+            <label>Subtitle Line 2</label>
+            <input type="search" id="title-body-input-2" class="input bottom-margin" maxlength="40" autocomplete="off" placeholder="Optional Subtitle...">
+            <label>Subtitle Line 3</label>
+            <input type="search" id="title-body-input-3" class="input bottom-margin" maxlength="40" autocomplete="off" placeholder="Optional Subtitle...">
+            <label>Subtitle Line 4</label>
+            <input type="search" id="title-body-input-4" class="input bottom-margin" maxlength="40" autocomplete="off" placeholder="Optional Subtitle...">
+            <p><strong>Note:</strong> Max 40 characters per line. Leave a line empty to create a line gap.</p>
+            <button class="close-modal">Close</button>
+		</div>
+	</div>
+</div>
+<!-- Rename Modal -->
+<div class="modal" id="rename-modal">
+	<div class="modal-body">
+		<div class="modal-head">Rename Layer</div>
+		<div class="modal-content">
+            <label>Layer Name</label>
+            <input type="search" id="rename-layer-input" class="input bottom-margin" placeholder="Enter a Layer Name..." maxlength="30" autocomplete="off">
+			<p><strong>Note:</strong> Max 30 characters. Text will not be truncated and could overlap title block text.</p>
+            <button class="close-modal">Close</button>
+		</div>
+	</div>
+</div>
+<!-- North Arrow Modal -->
+<div class="modal" id="north-modal">
+	<div class="modal-body">
+		<div class="modal-head">North Arrow & Scale</div>
+		<div class="modal-content">
+            <img src="assets/northarrow1.png" class="north-arrow" style="background: #ccc;">
+            <img src="assets/northarrow2.png" class="north-arrow">
+            <img src="assets/northarrow3.png" class="north-arrow">
+            <img src="assets/northarrow4.png" class="north-arrow">
+            <img src="assets/northarrow5.png" class="north-arrow">
+            <p>Scale Bar Units</p>
+            <div class="bottom-margin">
+                <input type="radio" name="scale-radios" value="imperial" checked>
+                <label>Imperial</label>
+                <input type="radio" name="scale-radios" value="metric">
+                <label>Metric</label>
+                <input type="radio" name="scale-radios" value="nautical">
+                <label>Nautical</label>
+            </div>
+			<button class="close-modal">Close</button>
+		</div>
+	</div>
+</div>
+<!-- About Modal -->
+<div class="modal" id="about-modal">
+	<div class="modal-body">
+		<div class="modal-head">About PDF Map Maker</div>
+		<div class="modal-content">
+            <h2>Print Ain't Dead Yet!</h2>
+            <p>Let's face it, we still need paper and PDF maps. Meet the web's best PDF Map Maker. Pick a layout, pick a basemap, add your own geoJSON data, style it, add a title and download a PDF map to print. Need to create some data to use on your map? Use my free editor <a href="https://vector.rocks/" target="_blank">vector.rocks</a> to create and download your own geo-data.</p>
+            <p>PDF Map Maker is a project created and maintained by <a href="https://stevecline.github.io/me/" target="_blank">Stephen Cline</a>. Hit me up on <a href="https://twitter.com/SteveClineBird" target="_blank">Twitter</a> to share the cool maps you make!</p>
+            <button class="close-modal">Close</button>
+		</div>
+	</div>
+</div>
+<!-- Layers Help Modal -->
+<div class="modal" id="layers-help-modal">
+	<div class="modal-body">
+		<div class="modal-head">Layers Help</div>
+		<div class="modal-content">
+            <h2>Layer = GeoJSON Feature Collection</h2>
+            <p>PDF Map Maker accepts geoJSON files. Much like traditional GIS data, PDF Map Maker expects all features to have the same geometry type in your geoJSON feature collection. If your geoJSON file has properties aka "attributes" in GIS speak, PDF Map Maker will detect them and you can label your features from the property values.</p>
+            <p>Draw some data? Use my free editor <a href="https://vector.rocks/" target="_blank">vector.rocks</a> to create and download your own geoJSON data to use with PDF Map Maker.</p>
+            <p>Have a shapefile? Use <a href="https://ogre.adc4gis.com/" target="_blank">Ogre web client</a> to convert shapefiles to geoJSON.</p>
+            <button class="close-modal">Close</button>
+		</div>
+	</div>
+</div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+<!-- <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script> -->
+<script src="assets/jspdf.js"></script>
+
+<script>
+const token = "pk.eyJ1Ijoic3RldmVjIiwiYSI6Imc1MHlqRDgifQ.9P1rTpqO9-ODUCB9KXi25A";
+const map = new mapboxgl.Map({
+    container: "map",
+    style: "mapbox://styles/mapbox/streets-v11",
+    center: [-120.559180,45.892363],
+    zoom: 5.6,
+    boxZoom: false,
+    maxZoom: 21,
+    minZoom: 1,
+    accessToken: token,
+    preserveDrawingBuffer: true,
+    attributionControl: false
+});
+map.addControl(new mapboxgl.NavigationControl({visualizePitch:true}),"top-left");
+//map.addControl(new MapboxGeocoder({accessToken:token,mapboxgl:mapboxgl,marker:false,collapsed:true}));
+
+function $(id){
+    return document.querySelector(id);
+}
+const mapContainer = $("#map");
+const inputZoom = $("#data-zoom");
+const inputBearing = $("#data-bearing");
+const inputPitch = $("#data-pitch");
+const layerContainer = $("#layer-container");
+const northArrow = $("#north-arrow");
+const pageContainer = $("#page-container");
+const checkbox3D = $("#checbox-3D");
+
+map.on("move", function() {
+    updateMapDetails();
+});
+
+function updateMapDetails(){
+    const zoom = map.getZoom();
+    const bearing = map.getBearing();
+    const pitch = map.getPitch();
+    inputZoom.value = zoom.toFixed(1);
+    inputBearing.value = Math.round(bearing);
+    inputPitch.value = Math.round(pitch);
+    northArrow.style.transform = "rotate(" + (360 - bearing) + "deg)";
+}
+updateMapDetails();
+inputZoom.addEventListener("input",function(e){
+    map.setZoom(e.target.value);
+});
+inputBearing.addEventListener("input",function(e){
+    map.setBearing(e.target.value);
+});
+inputPitch.addEventListener("input",function(e){
+    map.setPitch(e.target.value);
+});
+
+window.addEventListener("unload", function(e){
+    const data = {
+        zoom: map.getZoom(),
+        center: map.getCenter(),
+        pitch: map.getPitch(),
+        bearing: map.getBearing(),
+        style: map.getStyle(),
+        basemap: selectBasemap.value,
+        layout: selectLayout.value,
+        is3D: checkbox3D.checked,
+        scaleUnit: scaleBar.options.unit,
+        northArrow: northArrow.src.slice(northArrow.src.length - 15)
+    };
+    const titleBlockContent = {
+        main: titleMain.innerText,
+        body1: titleBody1.innerText,
+        body2: titleBody2.innerText,
+        body3: titleBody3.innerText,
+        body4: titleBody4.innerText,
+    };
+    localStorage.setItem("pdfmm-map-details", JSON.stringify(data));
+    localStorage.setItem("pdfmm-map-title", JSON.stringify(titleBlockContent));
+});
+
+const modalCloseButtons = document.querySelectorAll(".close-modal");
+const allModals = document.querySelectorAll(".modal");
+//CLOSE ALL MODALS
+for (let i = 0; i < modalCloseButtons.length; i++) {
+    modalCloseButtons[i].addEventListener("click", function() {
+    	closeAllModals(); 
+    });
+}
+function closeAllModals(){
+    const len = allModals.length;
+    for (let i = 0; i < len; i++) {
+        allModals[i].style.display = "none";
+    }
+}
+
+const northArrowChoices = document.querySelectorAll(".north-arrow");
+for (let i = 0; i < northArrowChoices.length; i++) {
+    northArrowChoices[i].addEventListener("click", function(e) {
+        for (let i = 0; i < northArrowChoices.length; i++){
+            northArrowChoices[i].style.background = "#fff";
+        }
+    	e.target.style.background = "#ccc";
+        northArrow.src = e.target.src;
+    });
+}
+
+const scaleBar = new mapboxgl.ScaleControl({unit: "imperial"});
+const scaleBarContainer = $("#scale-bar");
+scaleBarContainer.append(scaleBar.onAdd(map));
+const scaleBarRadioButtons = document.querySelectorAll("input[name=scale-radios]");
+for (let i = 0; i < scaleBarRadioButtons.length; i++) {
+    scaleBarRadioButtons[i].addEventListener("click", function(e) {
+        scaleBar.setUnit(e.target.value);
+    });
+}
+
+let sidebarOpen = false;
+function toggleLayersSidebar(){
+    if (sidebarOpen){
+        $("#sidebar").style.left = "-400px";
+        $("#open-layers-panel").style.left = "-18px";
+        $("#open-layers-panel").title = "Open Layers Panel";
+        $("#main").style.marginLeft = "0";
+        sidebarOpen = false;
+    }
+    else {
+        $("#sidebar").style.left = "0";
+        $("#open-layers-panel").style.left = "382px";
+        $("#open-layers-panel").title = "Close Layers Panel";
+        $("#main").style.marginLeft = "400px";
+        sidebarOpen = true;
+    }
+}
+const logoIcon = $("#logo");
+logoIcon.addEventListener("click", function() {
+    $("#about-modal").style.display = "block";
+});
+const layersHelp = $("#layers-help");
+layersHelp.addEventListener("click", function() {
+    $("#layers-help-modal").style.display = "block";
+});
+const buttonOpenLayersPanel = $("#open-layers-panel");
+buttonOpenLayersPanel.addEventListener("click", function() {
+    toggleLayersSidebar();
+});
+const titleBlockLegend = $("#title-block-legend");
+titleBlockLegend.addEventListener("click", function() {
+    toggleLayersSidebar();
+});
+const titleBlockTitle = $("#title-block-title");
+titleBlockTitle.addEventListener("click", function() {
+    $("#title-modal").style.display = "block";
+});
+const titleBlockNorth = $("#title-block-north");
+titleBlockNorth.addEventListener("click", function() {
+    $("#north-modal").style.display = "block";
+});
+
+const titleMainInput = $("#title-main-input");
+const titleBodyInput1 = $("#title-body-input-1");
+const titleBodyInput2 = $("#title-body-input-2");
+const titleBodyInput3 = $("#title-body-input-3");
+const titleBodyInput4 = $("#title-body-input-4");
+const titleMain = $("#title-main");
+const titleBody1 = $("#title-body-1");
+const titleBody2 = $("#title-body-2");
+const titleBody3 = $("#title-body-3");
+const titleBody4 = $("#title-body-4");
+const renameLayerInput = $("#rename-layer-input");
+titleMainInput.addEventListener("input",function(e){
+    titleMain.innerText = e.target.value;
+});
+titleBodyInput1.addEventListener("input",function(e){
+    titleBody1.innerText = e.target.value;
+});
+titleBodyInput2.addEventListener("input",function(e){
+    titleBody2.innerText = e.target.value;
+});
+titleBodyInput3.addEventListener("input",function(e){
+    titleBody3.innerText = e.target.value;
+});
+titleBodyInput4.addEventListener("input",function(e){
+    titleBody4.innerText = e.target.value;
+});
+renameLayerInput.addEventListener("input",function(e){
+    const geoType = $("#" + globalRenameId).childNodes[0].className;
+    let value = "";
+    if (geoType === "polygon"){
+        value = '<svg x="0px" y="0px" width="16px" height="16px"><path fill="#38f" d="M13.758,9.935l-1.572-4.372c0.385-0.322,0.635-0.799,0.635-1.34c0-0.969-0.785-1.754-1.754-1.754c-0.58,0-1.091,0.285-1.41,0.72L4.309,1.635C4.246,0.723,3.495,0,2.566,0C1.598,0,0.813,0.785,0.813,1.754c0,0.831,0.58,1.523,1.356,1.705l1.117,9.231c-0.568,0.29-0.961,0.875-0.961,1.557C2.325,15.215,3.109,16,4.078,16c0.914,0,1.655-0.701,1.738-1.593l6.497-1.719c0.317,0.454,0.842,0.753,1.438,0.753c0.969,0,1.754-0.786,1.754-1.754C15.504,10.722,14.723,9.938,13.758,9.935z M12.013,11.526l-6.497,1.719c-0.244-0.35-0.611-0.604-1.04-0.703L3.359,3.31c0.245-0.125,0.456-0.302,0.617-0.522l5.348,1.553c0.063,0.909,0.811,1.631,1.735,1.634l1.571,4.372C12.285,10.637,12.057,11.052,12.013,11.526z"/></svg> ' + e.target.value;
+    }
+    else if (geoType === "line"){
+        value = '<svg x="0px" y="0px" width="16px" height="16px"><path fill="#38f" d="M12.246,0c-0.969,0-1.754,0.785-1.754,1.754c0,0.382,0.126,0.733,0.334,1.022l-6.646,9.775c-0.138-0.034-0.279-0.059-0.428-0.059C2.785,12.492,2,13.277,2,14.246S2.785,16,3.753,16c0.969,0,1.754-0.785,1.754-1.754c0-0.383-0.125-0.733-0.333-1.021l6.646-9.775c0.137,0.035,0.278,0.059,0.427,0.059C13.215,3.508,14,2.722,14,1.754C14,0.785,13.215,0,12.246,0z"/></svg> ' + e.target.value;
+    }
+    else if (geoType === "point"){
+        value = '<svg x="0px" y="0px" width="16px" height="16px"><path fill="#38f" d="M8,0C4.402,0,3.213,2.988,3.213,5.301C3.213,7.775,8,16,8,16s4.787-8.225,4.787-10.699C12.787,2.988,11.599,0,8,0z M8,6.65c-0.94,0-1.703-0.762-1.703-1.703S7.06,3.245,8,3.245c0.941,0,1.703,0.762,1.703,1.703S8.941,6.65,8,6.65z"/></svg> ' + e.target.value;
+    }
+    $("#" + globalRenameId).childNodes[0].innerHTML = value;
+    updateLegend();
+    globalOverlayGeoJson.forEach(function(item,index){
+        if (item.pdfmmid === globalRenameId){
+            item.pdfmmName = e.target.value.trim();
+        }
+    });
+});
+
+const loadDataInput = $("#load-data");
+loadDataInput.addEventListener("change",function(){
+    for (let i = 0; i < loadDataInput.files.length; i++) {
+        getGeoJsonFiles(loadDataInput.files[i]);
+    }
+    loadDataInput.value = "";
+});
+
+function createUUID(){
+    let dt = new Date().getTime();
+    const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = (dt + Math.random()*16)%16 | 0;
+        dt = Math.floor(dt/16);
+        return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+    });
+    return uuid;
+}
+
+function getGeoJsonFiles(item){
+    const fcName = item.name.replace(/\.[^/.]+$/, "");
+    const readFile = new FileReader();
+    readFile.readAsText(item); 
+    readFile.onload = function(e){
+        const geoJson = JSON.parse(e.target.result);
+        const geoType = geoJson.features[0].geometry.type;
+        const uuid = createUUID();
+        const layerID = "PDFMM-" + uuid;
+        addDefaultLayerToMap(fcName,geoType,geoJson,layerID);
+        createLayerListItem(fcName,geoType,layerID);
+    };
+}
+
+let globalOverlayGeoJson = [];
+let globalStyleArray = [];
+let globalRenameId = undefined;
+
+function addDefaultLayerToMap(fcName,geoType,geoJson,layerID){
+    const source = layerID + "-source";
+    let firstProp = "no label";
+    if (Object.keys(geoJson.features[0].properties)[0]){
+        firstProp = Object.keys(geoJson.features[0].properties)[0];
+    }
+    map.addSource(source, {
+        "type": "geojson",
+        "data": geoJson
+    });
+    geoJson.pdfmmid = layerID;
+    geoJson.pdfmmName = fcName;
+    globalOverlayGeoJson.push(geoJson);
+    if (geoType === "Polygon" || geoType === "MultiPolygon"){
+        map.addLayer({
+            "id": layerID + "-fill-polygon",
+            "type": "fill",
+            "source": source,
+            "paint": {
+                "fill-color": "#3388ff",
+                "fill-opacity": 0.3,
+            }
+        });
+        map.addLayer({
+            "id": layerID + "-line-polygon",
+            "type": "line",
+            "source": source,
+            "paint": {
+                "line-color": "#3388ff",
+                "line-width": 3,
+                "line-dasharray": [1]
+            },
+            "layout": {
+                "line-cap": "round",
+                "line-join": "round"
+            }
+        });
+        //POLYGON LABEL
+        if (firstProp != "no label"){
+            map.addLayer({
+                "id": layerID + "-polygon-label",
+                "type": "symbol",
+                "source": source,
+                "layout": {
+                    "text-field": ["get", firstProp],
+                    "text-size": 16,
+                    "text-allow-overlap": true,
+                    "text-anchor": "center",
+                    "text-rotate": 0,
+                    "visibility": "none",
+                },
+                "paint": {
+                    "text-color": "#3388ff",
+                    "text-halo-color": "#ffffff",
+                    "text-halo-width": 2
+                }
+            });
+        }
+    }
+    if (geoType === "LineString" || geoType === "MultiLineString"){
+        map.addLayer({
+            "id": layerID + "-line",
+            "type": "line",
+            "source": source,
+            "paint": {
+                "line-color": "#3388ff",
+                "line-width": 3,
+                "line-dasharray": [1]
+            },
+            "layout": {
+                "line-cap": "round",
+                "line-join": "round"
+            }
+        });
+        //LINE LABEL
+        if (firstProp != "no label"){
+            map.addLayer({
+                "id": layerID + "-line-label",
+                "type": "symbol",
+                "source": source,
+                "layout": {
+                    "symbol-placement": "line",
+                    "symbol-spacing": 100,
+                    "text-field": ["get", firstProp],
+                    "text-size": 16,
+                    "text-offset":[0,0],
+                    "visibility": "none",
+                },
+                "paint": {
+                    "text-color": "#3388ff",
+                    "text-halo-color": "#ffffff",
+                    "text-halo-width": 2
+                }
+            });
+        }
+    }
+    if (geoType === "Point" || geoType === "MultiPoint"){
+        map.addLayer({
+            "id": layerID + "-point",
+            "type": "circle",
+            "source": source,
+            "paint": {
+                "circle-radius": 5,
+                "circle-color": "#ffffff",
+                "circle-stroke-color": "#3388ff",
+                "circle-stroke-width": 3
+            }
+        });
+        //POINT LABEL
+        if (firstProp != "no label"){
+            map.addLayer({
+                "id": layerID + "-point-label",
+                "type": "symbol",
+                "source": source,
+                "layout": {
+                    "text-field": ["get", firstProp],
+                    "text-size": 16,
+                    "text-radial-offset": 0.6,
+                    "text-justify": "auto",
+                    "text-anchor": "bottom",
+                    "text-allow-overlap": true,
+                    "visibility": "none",
+                },
+                "paint": {
+                    "text-color": "#3388ff",
+                    "text-halo-color": "#ffffff",
+                    "text-halo-width": 2
+                }
+            });
+        }
+    }
+}
+
+function createLayerListItem(fcName,geoType,layerID){
+    const fcItem = document.createElement("fieldset");
+    fcItem.id = layerID;
+    const legendBlock = document.createElement("legend");
+    legendBlock.title = "Rename Layer";
+    legendBlock.addEventListener("click",function(e){
+        $("#rename-modal").style.display = "block";
+        renameLayerInput.value = e.target.innerText.trim();
+        globalRenameId = e.target.parentElement.id;
+    });
+    fcItem.append(legendBlock);
+    if (geoType === "Polygon" || geoType === "MultiPolygon"){
+        legendBlock.classList.add("polygon");
+        legendBlock.innerHTML = '<svg x="0px" y="0px" width="16px" height="16px"><path fill="#38f" d="M13.758,9.935l-1.572-4.372c0.385-0.322,0.635-0.799,0.635-1.34c0-0.969-0.785-1.754-1.754-1.754c-0.58,0-1.091,0.285-1.41,0.72L4.309,1.635C4.246,0.723,3.495,0,2.566,0C1.598,0,0.813,0.785,0.813,1.754c0,0.831,0.58,1.523,1.356,1.705l1.117,9.231c-0.568,0.29-0.961,0.875-0.961,1.557C2.325,15.215,3.109,16,4.078,16c0.914,0,1.655-0.701,1.738-1.593l6.497-1.719c0.317,0.454,0.842,0.753,1.438,0.753c0.969,0,1.754-0.786,1.754-1.754C15.504,10.722,14.723,9.938,13.758,9.935z M12.013,11.526l-6.497,1.719c-0.244-0.35-0.611-0.604-1.04-0.703L3.359,3.31c0.245-0.125,0.456-0.302,0.617-0.522l5.348,1.553c0.063,0.909,0.811,1.631,1.735,1.634l1.571,4.372C12.285,10.637,12.057,11.052,12.013,11.526z"/></svg> ' + fcName;
+        createPolygonLayerStyleControls(fcItem,layerID);
+    }
+    else if (geoType === "LineString" || geoType === "MultiLineString"){
+        legendBlock.classList.add("line");
+        legendBlock.innerHTML = '<svg x="0px" y="0px" width="16px" height="16px"><path fill="#38f" d="M12.246,0c-0.969,0-1.754,0.785-1.754,1.754c0,0.382,0.126,0.733,0.334,1.022l-6.646,9.775c-0.138-0.034-0.279-0.059-0.428-0.059C2.785,12.492,2,13.277,2,14.246S2.785,16,3.753,16c0.969,0,1.754-0.785,1.754-1.754c0-0.383-0.125-0.733-0.333-1.021l6.646-9.775c0.137,0.035,0.278,0.059,0.427,0.059C13.215,3.508,14,2.722,14,1.754C14,0.785,13.215,0,12.246,0z"/></svg> ' + fcName;
+        createLineLayerStyleControls(fcItem,layerID);
+    }
+    else if (geoType === "Point" || geoType === "MultiPoint"){
+        legendBlock.classList.add("point");
+        legendBlock.innerHTML = '<svg x="0px" y="0px" width="16px" height="16px"><path fill="#38f" d="M8,0C4.402,0,3.213,2.988,3.213,5.301C3.213,7.775,8,16,8,16s4.787-8.225,4.787-10.699C12.787,2.988,11.599,0,8,0z M8,6.65c-0.94,0-1.703-0.762-1.703-1.703S7.06,3.245,8,3.245c0.941,0,1.703,0.762,1.703,1.703S8.941,6.65,8,6.65z"/></svg> ' + fcName;
+        createPointLayerStyleControls(fcItem,layerID);
+    }
+    //UP BUTTON
+    const buttonMoveLayer = document.createElement("button");
+    buttonMoveLayer.classList.add("move-button");
+    buttonMoveLayer.innerHTML = "&#129137;";
+    buttonMoveLayer.title = "Move Layer to Top";
+    buttonMoveLayer.addEventListener("click", function(){
+        layerContainer.insertBefore($("#" + layerID),layerContainer.firstElementChild);
+        const layersArray = globalStyleArray.filter(x => x.source.slice(0,-7) === layerID);
+        layersArray.forEach(function(item){
+            if (map.getLayer("sky")){
+                map.moveLayer(item.id,"sky");
+            }
+            else {
+                map.moveLayer(item.id);
+            }
+        });
+        updateLegend();
+    });
+    //REMOVE BUTTON
+    const buttonRemoveLayer = document.createElement("button");
+    buttonRemoveLayer.classList.add("remove-button");
+    buttonRemoveLayer.innerHTML = "&#10006;";
+    buttonRemoveLayer.title = "Remove Layer";
+    buttonRemoveLayer.addEventListener("click", function(){
+        removeOverlayLayer(buttonRemoveLayer,layerID);
+    });
+    fcItem.append(buttonMoveLayer,buttonRemoveLayer);
+    layerContainer.insertBefore(fcItem,layerContainer.childNodes[0]);
+    updateLegend();
+};
+
+function removeOverlayLayer(element,layerID){
+    const itemsToRemove = globalStyleArray.filter(x => x.source.slice(0,-7) === layerID);
+    const filteredArray = globalStyleArray.filter(x => x.source.slice(0,-7) != layerID);
+    globalStyleArray = filteredArray;
+    const filteredGeoJson = globalOverlayGeoJson.filter(x => x.pdfmmid != layerID);
+    globalOverlayGeoJson = filteredGeoJson;
+    itemsToRemove.forEach(function(item){
+        map.removeLayer(item.id);
+    });
+    itemsToRemove.forEach(function(item){
+        if (map.getSource(item.source)){
+            map.removeSource(item.source);
+        }
+    });
+    element.parentElement.remove();
+    updateLegend();
+}
+
+function updateLegend(){
+    titleBlockLegend.innerHTML = "";
+    const nodeList = layerContainer.querySelectorAll("fieldset");
+    let showCount = 0;
+    nodeList.forEach(function(item,index){
+        const geoType = nodeList[index].childNodes[0].className;
+        let p = 5;
+        if(geoType === "line"){p = 3;}
+        const showInLegend = nodeList[index].childNodes[1].childNodes[p].childNodes[0].checked;
+        if (showInLegend){
+            showCount = showCount + 1;
+            const checkbox = nodeList[index].childNodes[1].childNodes[p].childNodes[0];
+            const legendText = nodeList[index].childNodes[1].childNodes[p].childNodes[1];
+            if (showCount > 6){
+                checkbox.disabled = true;
+                legendText.innerText = "Legend is Full";
+                legendText.style.color = "#e74c3c";
+            }
+            else{
+                checkbox.disabled = false;
+                legendText.innerText = "Show in Legend";
+                legendText.style.color = "inherit";
+            }
+            const div = document.createElement("div");
+            div.classList.add("legend-item");
+            div.style.width = titleBlockLegend.offsetWidth + "px";
+            const layerID = nodeList[index].id;
+            const geoType = nodeList[index].childNodes[0].className;
+            const label = nodeList[index].childNodes[0].innerText;
+            if (geoType === "polygon"){
+                const strokeWidth = map.getPaintProperty(layerID + "-line-polygon","line-width");
+                if (strokeWidth > 7){
+                    strokeWidth = 7;
+                }
+                div.innerHTML = '<svg style="width:22px;height:16px;"><rect x="2" y="2" width="18" height="12" stroke="' + map.getPaintProperty(layerID + "-line-polygon","line-color") + '" stroke-opacity="1" stroke-width="' + strokeWidth + '" stroke-linecap="butt" stroke-linejoin="butt" fill="' + map.getPaintProperty(layerID + "-fill-polygon","fill-color") + '" fill-opacity="' + map.getPaintProperty(layerID + "-fill-polygon","fill-opacity") + '" /></svg>' + label;
+            }
+            else if (geoType === "line") {
+                div.innerHTML = '<svg style="width:22px;height:16px;"><line x1="0" y1="8" x2="22" y2="8" width="22" height="16" stroke="' + map.getPaintProperty(layerID + "-line","line-color") + '" stroke-opacity="1" stroke-width="' + map.getPaintProperty(layerID + "-line","line-width") + '" stroke-linecap="butt" /></svg>' + label;
+            }
+            else {
+                let radius = map.getPaintProperty(layerID + "-point","circle-radius");
+                const strokeWidthCircle = map.getPaintProperty(layerID + "-point","circle-stroke-width");
+                if (radius > 7){
+                    radius = 7;
+                }
+                if (strokeWidthCircle > 6){
+                    strokeWidthCircle = 6;
+                }
+                div.innerHTML = '<svg style="width:22px;height:16px;"><circle cx="11" cy="8" r="' + radius + '" stroke="' + map.getPaintProperty(layerID + "-point","circle-stroke-color") + '" stroke-width="' + strokeWidthCircle + '" fill="' + map.getPaintProperty(layerID + "-point","circle-color") + '" fill-opacity="1" /></svg>' + label;
+            }
+            titleBlockLegend.append(div);
+        }
+    });
+}
+
+function createPolygonLayerStyleControls(element,layerID){
+    const container = document.createElement("div");
+    container.classList.add("grid-container");
+    element.append(container);
+    //-------
+    const div1 = document.createElement("div");
+    const lineColorLabel = document.createElement("label");
+    lineColorLabel.innerText = "Outline Color";
+    const lineColorInput = document.createElement("input");
+    lineColorInput.setAttribute("type","color");
+    lineColorInput.setAttribute("value",map.getPaintProperty(layerID + "-line-polygon","line-color"));
+    lineColorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-line-polygon","line-color",lineColorInput.value);
+        updateLegend();
+    });
+    div1.append(lineColorLabel,lineColorInput);
+    //-------
+    const div2 = document.createElement("div");
+    const lineWidthLabel = document.createElement("label");
+    lineWidthLabel.innerHTML = "Outline Width: <span id='" + layerID + "-line-width' style='font-weight:bold;'>3px</span>";
+    const lineWidthInput = document.createElement("input");
+    lineWidthInput.setAttribute("type","range");
+    lineWidthInput.setAttribute("min","0");
+    lineWidthInput.setAttribute("max","10");
+    lineWidthInput.setAttribute("step","1");
+    lineWidthInput.setAttribute("value",map.getPaintProperty(layerID + "-line-polygon","line-width"));
+    lineWidthInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-line-polygon","line-width",Number(lineWidthInput.value));
+        $("#" + layerID + "-line-width").innerText = lineWidthInput.value + "px";
+        updateLegend();
+    });
+    div2.append(lineWidthLabel,lineWidthInput);
+    //-------
+    const div3 = document.createElement("div");
+    const fillColorLabel = document.createElement("label");
+    fillColorLabel.innerText = "Fill Color";
+    const fillColorInput = document.createElement("input");
+    fillColorInput.setAttribute("type","color");
+    fillColorInput.setAttribute("value",map.getPaintProperty(layerID + "-fill-polygon","fill-color"));
+    fillColorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-fill-polygon","fill-color",fillColorInput.value);
+        updateLegend();
+    });
+    div3.append(fillColorLabel,fillColorInput);
+    //-------
+    const div4 = document.createElement("div");
+    const fillOpacityLabel = document.createElement("label");
+    fillOpacityLabel.innerHTML = "Fill Opacity: <span id='" + layerID + "-fill-opacity' style='font-weight:bold;'>30%</span>";
+    const fillOpacityInput = document.createElement("input");
+    fillOpacityInput.setAttribute("type","range");
+    fillOpacityInput.setAttribute("min","0");
+    fillOpacityInput.setAttribute("max","1");
+    fillOpacityInput.setAttribute("step","0.05");
+    fillOpacityInput.setAttribute("value",map.getPaintProperty(layerID + "-fill-polygon","fill-opacity"));
+    fillOpacityInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-fill-polygon","fill-opacity",Number(fillOpacityInput.value));
+        const fillValue = Math.round((fillOpacityInput.value * 100));
+        $("#" + layerID + "-fill-opacity").innerText = fillValue + "%";
+        updateLegend();
+    });
+    div4.append(fillOpacityLabel,fillOpacityInput);
+    //---------------
+    const div5 = document.createElement("div");
+    if (map.getLayer(layerID + "-polygon-label")){
+        const checkboxLabel = document.createElement("label");
+        checkboxLabel.innerText = "Label";
+        const checkbox = document.createElement("input");
+        checkbox.setAttribute("type","checkbox");
+        if (map.getLayoutProperty(layerID + "-polygon-label", "visibility") === "visible"){
+            checkbox.checked = "true";
+            createPolygonLabelControls(element,layerID);
+        }
+        checkbox.addEventListener("click",function(){
+            if (checkbox.checked){
+                map.setLayoutProperty(layerID + "-polygon-label","visibility","visible");
+                createPolygonLabelControls(element,layerID);
+            } else {
+                map.setLayoutProperty(layerID + "-polygon-label","visibility","none");
+                $("#" + layerID + "-label-controls").remove();
+            }
+        });
+        div5.append(checkbox,checkboxLabel);
+    }
+    //-----
+    const div6 = document.createElement("div");
+    const checkboxLegendLabel = document.createElement("label");
+    checkboxLegendLabel.innerText = "Show in Legend";
+    const checkboxLegend = document.createElement("input");
+    checkboxLegend.setAttribute("type","checkbox");
+    checkboxLegend.checked = "true";
+    checkboxLegend.addEventListener("click",function(){
+        updateLegend();
+    });
+    div6.append(checkboxLegend,checkboxLegendLabel);
+    container.append(div1,div2,div3,div4,div5,div6);
+}
+
+function createLineLayerStyleControls(element,layerID){
+    const container = document.createElement("div");
+    container.classList.add("grid-container");
+    element.append(container);
+    //-------
+    const div1 = document.createElement("div");
+    const lineColorLabel = document.createElement("label");
+    lineColorLabel.innerText = "Outline Color";
+    const lineColorInput = document.createElement("input");
+    lineColorInput.setAttribute("type","color");
+    lineColorInput.setAttribute("value",map.getPaintProperty(layerID + "-line","line-color"));
+    lineColorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-line","line-color",lineColorInput.value);
+        updateLegend();
+    });
+    div1.append(lineColorLabel,lineColorInput);
+    //-------
+    const div2 = document.createElement("div");
+    const lineWidthLabel = document.createElement("label");
+    lineWidthLabel.innerHTML = "Line Width: <span id='" + layerID + "-line-width' style='font-weight:bold;'>3px</span>";
+    const lineWidthInput = document.createElement("input");
+    lineWidthInput.setAttribute("type","range");
+    lineWidthInput.setAttribute("min","1");
+    lineWidthInput.setAttribute("max","10");
+    lineWidthInput.setAttribute("step","1");
+    lineWidthInput.setAttribute("value",map.getPaintProperty(layerID + "-line","line-width"));
+    lineWidthInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-line","line-width",Number(lineWidthInput.value));
+        $("#" + layerID + "-line-width").innerText = lineWidthInput.value + "px";
+        updateLegend();
+    });
+    div2.append(lineWidthLabel,lineWidthInput);
+    //-----
+    const div3 = document.createElement("div");
+    if (map.getLayer(layerID + "-line-label")){
+        const checkboxLabel = document.createElement("label");
+        checkboxLabel.innerText = "Label";
+        const checkbox = document.createElement("input");
+        checkbox.setAttribute("type","checkbox");
+        if (map.getLayoutProperty(layerID + "-line-label", "visibility") === "visible"){
+            checkbox.checked = "true";
+            createLineLabelControls(element,layerID);
+        }
+        checkbox.addEventListener("click",function(){
+            if (checkbox.checked){
+                map.setLayoutProperty(layerID + "-line-label","visibility","visible");
+                createLineLabelControls(element,layerID);
+            } else {
+                map.setLayoutProperty(layerID + "-line-label","visibility","none");
+                $("#" + layerID + "-label-controls").remove();
+            }
+        });
+        div3.append(checkbox,checkboxLabel);
+    }
+    //-----
+    const div4 = document.createElement("div");
+    const checkboxLegendLabel = document.createElement("label");
+    checkboxLegendLabel.innerText = "Show in Legend";
+    const checkboxLegend = document.createElement("input");
+    checkboxLegend.setAttribute("type","checkbox");
+    checkboxLegend.checked = "true";
+    checkboxLegend.addEventListener("click",function(){
+        updateLegend();
+    });
+    div4.append(checkboxLegend,checkboxLegendLabel);
+    container.append(div1,div2,div3,div4);
+}
+
+function createPointLayerStyleControls(element,layerID){
+    const container = document.createElement("div");
+    container.classList.add("grid-container");
+    element.append(container);
+    //-------
+    const div1 = document.createElement("div");
+    const circleStrokeColorLabel = document.createElement("label");
+    circleStrokeColorLabel.innerText = "Outline Color";
+    const circleStrokeColorInput = document.createElement("input");
+    circleStrokeColorInput.setAttribute("type","color");
+    circleStrokeColorInput.setAttribute("value",map.getPaintProperty(layerID + "-point","circle-stroke-color"));
+    circleStrokeColorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-point","circle-stroke-color",circleStrokeColorInput.value);
+        updateLegend();
+    });
+    div1.append(circleStrokeColorLabel,circleStrokeColorInput);
+    //-------
+    const div2 = document.createElement("div");
+    const circleStrokeWidthLabel = document.createElement("label");
+    circleStrokeWidthLabel.innerHTML = "Outline Width: <span id='" + layerID + "-circle-stroke-width' style='font-weight:bold;'>3px</span>";
+    const circleStrokeWidthInput = document.createElement("input");
+    circleStrokeWidthInput.setAttribute("type","range");
+    circleStrokeWidthInput.setAttribute("min","0");
+    circleStrokeWidthInput.setAttribute("max","10");
+    circleStrokeWidthInput.setAttribute("step","1");
+    circleStrokeWidthInput.setAttribute("value",map.getPaintProperty(layerID + "-point","circle-stroke-width"));
+    circleStrokeWidthInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-point","circle-stroke-width",Number(circleStrokeWidthInput.value));
+        $("#" + layerID + "-circle-stroke-width").innerText = circleStrokeWidthInput.value + "px";
+        updateLegend();
+    });
+    div2.append(circleStrokeWidthLabel,circleStrokeWidthInput);
+    //-------
+    const div3 = document.createElement("div");
+    const circleColorLabel = document.createElement("label");
+    circleColorLabel.innerText = "Fill Color";
+    const circleColorInput = document.createElement("input");
+    circleColorInput.setAttribute("type","color");
+    circleColorInput.setAttribute("value",map.getPaintProperty(layerID + "-point","circle-color"));
+    circleColorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-point","circle-color",circleColorInput.value);
+        updateLegend();
+    });
+    div3.append(circleColorLabel,circleColorInput);
+    //-------
+    const div4 = document.createElement("div");
+    const circleRadiusLabel = document.createElement("label");
+    circleRadiusLabel.innerHTML = "Circle Radius: <span id='" + layerID + "-circle-radius' style='font-weight:bold;'>5px</span>";
+    const circleRadiusInput = document.createElement("input");
+    circleRadiusInput.setAttribute("type","range");
+    circleRadiusInput.setAttribute("min","2");
+    circleRadiusInput.setAttribute("max","20");
+    circleRadiusInput.setAttribute("step","1");
+    circleRadiusInput.setAttribute("value",map.getPaintProperty(layerID + "-point","circle-radius"));
+    circleRadiusInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-point","circle-radius",Number(circleRadiusInput.value));
+        $("#" + layerID + "-circle-radius").innerText = circleRadiusInput.value + "px";
+        updateLegend();
+    });
+    div4.append(circleRadiusLabel,circleRadiusInput);
+    //-----
+    const div5 = document.createElement("div");
+    if (map.getLayer(layerID + "-point-label")){
+        const checkboxLabel = document.createElement("label");
+        checkboxLabel.innerText = "Label";
+        const checkbox = document.createElement("input");
+        checkbox.setAttribute("type","checkbox");
+        if (map.getLayoutProperty(layerID + "-point-label", "visibility") === "visible"){
+            checkbox.checked = "true";
+            createPointLabelControls(element,layerID);
+        }
+        checkbox.addEventListener("click",function(){
+            if (checkbox.checked){
+                map.setLayoutProperty(layerID + "-point-label","visibility","visible");
+                createPointLabelControls(element,layerID);
+            } else {
+                map.setLayoutProperty(layerID + "-point-label","visibility","none");
+                $("#" + layerID + "-label-controls").remove();
+            }
+        });
+        div5.append(checkbox,checkboxLabel);
+    }
+    //-----
+    const div6 = document.createElement("div");
+    const checkboxLegendLabel = document.createElement("label");
+    checkboxLegendLabel.innerText = "Show in Legend";
+    const checkboxLegend = document.createElement("input");
+    checkboxLegend.setAttribute("type","checkbox");
+    checkboxLegend.checked = "true";
+    checkboxLegend.style.margin = "0 0.5em";
+    checkboxLegend.addEventListener("click",function(){
+        updateLegend();
+    });
+    div6.append(checkboxLegend,checkboxLegendLabel);
+    container.append(div1,div2,div3,div4,div5,div6);
+}
+
+function createPolygonLabelControls(element,layerID){
+    const container = document.createElement("div");
+    container.id = layerID + "-label-controls";
+    container.classList.add("grid-container");
+    container.style.marginTop = "1em";
+    element.append(container);
+    //-------------------------
+    const div1 = document.createElement("div");
+    const labelField = document.createElement("label");
+    labelField.innerText = "Label Field";
+    const select1 = document.createElement("select");
+    select1.classList.add("input");
+    const props = globalOverlayGeoJson.filter(x => x.pdfmmid === layerID)[0].features[0].properties;
+    for (let prop in props){
+        const option = document.createElement("option");
+        option.value = prop;
+        option.innerText = prop;
+        select1.append(option);
+    }
+    select1.value = map.getLayoutProperty(layerID + "-polygon-label", "text-field")[1];
+    select1.addEventListener("change",function(){
+        map.setLayoutProperty(layerID + "-polygon-label","text-field",["get",select1.value]);
+    });
+    div1.append(labelField,select1);
+    //-------------------------
+    const div2 = document.createElement("div");
+    const rotateLabel = document.createElement("label");
+    rotateLabel.innerHTML = "Rotate: <span id='" + layerID + "-label-rotate' style='font-weight:bold;'>" + map.getLayoutProperty(layerID + "-polygon-label","text-rotate") + " deg</span>";
+    const rotateInput = document.createElement("input");
+    rotateInput.setAttribute("type","range");
+    rotateInput.setAttribute("min","0");
+    rotateInput.setAttribute("max","360");
+    rotateInput.setAttribute("step","1");
+    rotateInput.setAttribute("value",map.getLayoutProperty(layerID + "-polygon-label","text-rotate"));
+    rotateInput.addEventListener("input",function(e){
+        map.setLayoutProperty(layerID + "-polygon-label","text-rotate",Number(rotateInput.value));
+        $("#" + layerID + "-label-rotate").innerText = rotateInput.value + " deg";
+    });
+    div2.append(rotateLabel,rotateInput);
+    //-------------------------------    
+    const div4 = document.createElement("div");
+    const fontSizeLabel = document.createElement("label");
+    fontSizeLabel.innerHTML = "Font Size: <span id='" + layerID + "-label-font-size' style='font-weight:bold;'>" + map.getLayoutProperty(layerID + "-polygon-label","text-size") + "px</span>";
+    const fontSizeInput = document.createElement("input");
+    fontSizeInput.setAttribute("type","range");
+    fontSizeInput.setAttribute("min","10");
+    fontSizeInput.setAttribute("max","50");
+    fontSizeInput.setAttribute("step","1");
+    fontSizeInput.setAttribute("value",map.getLayoutProperty(layerID + "-polygon-label","text-size"));
+    fontSizeInput.addEventListener("input",function(e){
+        map.setLayoutProperty(layerID + "-polygon-label","text-size",Number(fontSizeInput.value));
+        $("#" + layerID + "-label-font-size").innerText = fontSizeInput.value + "px";
+    });
+    div4.append(fontSizeLabel,fontSizeInput);
+    //--------------------------
+    const div5 = document.createElement("div");
+    const haloColorLabel = document.createElement("label");
+    haloColorLabel.innerText = "Halo Color";
+    const haloColorInput = document.createElement("input");
+    haloColorInput.setAttribute("type","color");
+    haloColorInput.setAttribute("value",map.getPaintProperty(layerID + "-polygon-label","text-halo-color"));
+    haloColorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-polygon-label","text-halo-color",haloColorInput.value);
+    });
+    div5.append(haloColorLabel,haloColorInput);
+    //-------------------------------
+    const div6 = document.createElement("div");
+    const colorLabel = document.createElement("label");
+    colorLabel.innerText = "Label Color";
+    const colorInput = document.createElement("input");
+    colorInput.setAttribute("type","color");
+    colorInput.setAttribute("value",map.getPaintProperty(layerID + "-polygon-label","text-color"));
+    colorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-polygon-label","text-color",colorInput.value);
+    });
+    div6.append(colorLabel,colorInput);
+    //-------------------------------
+    const div3 = document.createElement("div");
+    div3.style.paddingTop = "26px";
+    const checkboxLabel = document.createElement("label");
+    checkboxLabel.innerText = "Allow Overlap";
+    const checkbox = document.createElement("input");
+    checkbox.setAttribute("type","checkbox");
+    if (map.getLayoutProperty(layerID + "-polygon-label", "text-allow-overlap")){
+        checkbox.checked = "true";
+    }
+    checkbox.addEventListener("click",function(){
+        if (checkbox.checked){
+            map.setLayoutProperty(layerID + "-polygon-label","text-allow-overlap",true);
+        } else {
+            map.setLayoutProperty(layerID + "-polygon-label","text-allow-overlap",false);
+        }
+    });
+    div3.append(checkbox,checkboxLabel);
+    //-------------------------------
+    container.append(div6,div2,div5,div4,div1,div3);
+}
+
+function createLineLabelControls(element,layerID){
+    const container = document.createElement("div");
+    container.id = layerID + "-label-controls";
+    container.classList.add("grid-container");
+    container.style.marginTop = "1em";
+    element.append(container);
+    //-------------------------
+    const div1 = document.createElement("div");
+    const labelField = document.createElement("label");
+    labelField.innerText = "Label Field";
+    const select1 = document.createElement("select");
+    select1.classList.add("input");
+    const props = globalOverlayGeoJson.filter(x => x.pdfmmid === layerID)[0].features[0].properties;
+    for (let prop in props){
+        const option = document.createElement("option");
+        option.value = prop;
+        option.innerText = prop;
+        select1.append(option);
+    }
+    select1.value = map.getLayoutProperty(layerID + "-line-label", "text-field")[1];
+    select1.addEventListener("change",function(){
+        map.setLayoutProperty(layerID + "-line-label","text-field",["get",select1.value]);
+    });
+    div1.append(labelField,select1);
+    //-------------------------
+    const div2 = document.createElement("div");
+    const offsetLabel = document.createElement("label");
+    offsetLabel.innerHTML = "Label Offset: <span id='" + layerID + "-label-offset' style='font-weight:bold;'>" + map.getLayoutProperty(layerID + "-line-label","text-offset")[1] + "</span>";
+    const offsetInput = document.createElement("input");
+    offsetInput.setAttribute("type","range");
+    offsetInput.setAttribute("min","-0.8");
+    offsetInput.setAttribute("max","0.8");
+    offsetInput.setAttribute("step","0.1");
+    offsetInput.setAttribute("value",map.getLayoutProperty(layerID + "-line-label","text-offset")[1]);
+    offsetInput.addEventListener("input",function(e){
+        map.setLayoutProperty(layerID + "-line-label","text-offset",[0,Number(offsetInput.value)]);
+        $("#" + layerID + "-label-offset").innerText = offsetInput.value;
+    });
+    div2.append(offsetLabel,offsetInput);
+    //-------------------------------    
+    const div4 = document.createElement("div");
+    const fontSizeLabel = document.createElement("label");
+    fontSizeLabel.innerHTML = "Font Size: <span id='" + layerID + "-label-font-size' style='font-weight:bold;'>" + map.getLayoutProperty(layerID + "-line-label","text-size") + "px</span>";
+    const fontSizeInput = document.createElement("input");
+    fontSizeInput.setAttribute("type","range");
+    fontSizeInput.setAttribute("min","10");
+    fontSizeInput.setAttribute("max","50");
+    fontSizeInput.setAttribute("step","1");
+    fontSizeInput.setAttribute("value",map.getLayoutProperty(layerID + "-line-label","text-size"));
+    fontSizeInput.addEventListener("input",function(e){
+        map.setLayoutProperty(layerID + "-line-label","text-size",Number(fontSizeInput.value));
+        $("#" + layerID + "-label-font-size").innerText = fontSizeInput.value + "px";
+    });
+    div4.append(fontSizeLabel,fontSizeInput);
+    //--------------------------
+    const div5 = document.createElement("div");
+    const haloColorLabel = document.createElement("label");
+    haloColorLabel.innerText = "Halo Color";
+    const haloColorInput = document.createElement("input");
+    haloColorInput.setAttribute("type","color");
+    haloColorInput.setAttribute("value",map.getPaintProperty(layerID + "-line-label","text-halo-color"));
+    haloColorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-line-label","text-halo-color",haloColorInput.value);
+    });
+    div5.append(haloColorLabel,haloColorInput);
+    //-------------------------------
+    const div6 = document.createElement("div");
+    const colorLabel = document.createElement("label");
+    colorLabel.innerText = "Label Color";
+    const colorInput = document.createElement("input");
+    colorInput.setAttribute("type","color");
+    colorInput.setAttribute("value",map.getPaintProperty(layerID + "-line-label","text-color"));
+    colorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-line-label","text-color",colorInput.value);
+    });
+    div6.append(colorLabel,colorInput);
+    //-------------------------------
+    const div3 = document.createElement("div");
+    const spacingLabel = document.createElement("label");
+    spacingLabel.innerHTML = "Label Spacing: <span id='" + layerID + "-label-spacing' style='font-weight:bold;'>" + map.getLayoutProperty(layerID + "-line-label","symbol-spacing") + "</span>";
+    const spacingInput = document.createElement("input");
+    spacingInput.setAttribute("type","range");
+    spacingInput.setAttribute("min","1");
+    spacingInput.setAttribute("max","300");
+    spacingInput.setAttribute("step","1");
+    spacingInput.setAttribute("value",map.getLayoutProperty(layerID + "-line-label","symbol-spacing"));
+    spacingInput.addEventListener("input",function(e){
+        map.setLayoutProperty(layerID + "-line-label","symbol-spacing",Number(spacingInput.value));
+        $("#" + layerID + "-label-spacing").innerText = spacingInput.value;
+    });
+    div3.append(spacingLabel,spacingInput);
+    //symbol-spacing
+    container.append(div6,div2,div5,div4,div1,div3);
+}
+
+function createPointLabelControls(element,layerID){
+    const container = document.createElement("div");
+    container.id = layerID + "-label-controls";
+    container.classList.add("grid-container");
+    container.style.marginTop = "1em";
+    element.append(container);
+    //-------------------------
+    const div1 = document.createElement("div");
+    const labelField = document.createElement("label");
+    labelField.innerText = "Label Field";
+    const select1 = document.createElement("select");
+    select1.classList.add("input");
+    const props = globalOverlayGeoJson.filter(x => x.pdfmmid === layerID)[0].features[0].properties;
+    for (let prop in props){
+        const option = document.createElement("option");
+        option.value = prop;
+        option.innerText = prop;
+        select1.append(option);
+    }
+    select1.value = map.getLayoutProperty(layerID + "-point-label", "text-field")[1];
+    select1.addEventListener("change",function(){
+        map.setLayoutProperty(layerID + "-point-label","text-field",["get",select1.value]);
+    });
+    div1.append(labelField,select1);
+    //-------------------------
+    const div2 = document.createElement("div");
+    const offsetLabel = document.createElement("label");
+    offsetLabel.innerHTML = "Label Offset: <span id='" + layerID + "-label-offset' style='font-weight:bold;'>" + (map.getLayoutProperty(layerID + "-point-label","text-radial-offset") * 10) + "</span>";
+    const offsetInput = document.createElement("input");
+    offsetInput.setAttribute("type","range");
+    offsetInput.setAttribute("min","0.1");
+    offsetInput.setAttribute("max","2");
+    offsetInput.setAttribute("step","0.05");
+    offsetInput.setAttribute("value",map.getLayoutProperty(layerID + "-point-label","text-radial-offset"));
+    offsetInput.addEventListener("input",function(e){
+        map.setLayoutProperty(layerID + "-point-label","text-radial-offset",Number(offsetInput.value));
+        $("#" + layerID + "-label-offset").innerText = offsetInput.value * 10;
+    });
+    div2.append(offsetLabel,offsetInput);
+    //--------------------------
+    const div3 = document.createElement("div");
+    const labelPlacement = document.createElement("label");
+    labelPlacement.innerText = "Placement";
+    const select2 = document.createElement("select");
+    select2.classList.add("input");
+    const placementList = [["best","Best Fit"],["center","Center"],["left","Right"],["right","Left"],["top","Bottom"],["bottom","Top"],["top-left","Bottom-Right"],["top-right","Bottom-Left"],["bottom-left","Top-Right"],["bottom-right","Top-Left"]];
+    placementList.forEach(function(item){
+        const option = document.createElement("option");
+        option.value = item[0];
+        option.innerText = item[1];
+        select2.append(option);
+    });
+    select2.value = map.getLayoutProperty(layerID + "-point-label", "text-anchor");
+    select2.addEventListener("change",function(){
+        if (select2.value === "best" ){
+            map.setLayoutProperty(layerID + "-point-label","text-variable-anchor",["bottom-left","bottom-right","top-left","top-right","left","right","bottom","top"]);
+        }
+        else {
+            map.setLayoutProperty(layerID + "-point-label","text-variable-anchor",undefined);
+            map.setLayoutProperty(layerID + "-point-label","text-anchor",select2.value);
+        }
+    });
+    div3.append(labelPlacement,select2);
+    //-------------------------------    
+    const div4 = document.createElement("div");
+    const fontSizeLabel = document.createElement("label");
+    fontSizeLabel.innerHTML = "Font Size: <span id='" + layerID + "-label-font-size' style='font-weight:bold;'>" + map.getLayoutProperty(layerID + "-point-label","text-size") + "px</span>";
+    const fontSizeInput = document.createElement("input");
+    fontSizeInput.setAttribute("type","range");
+    fontSizeInput.setAttribute("min","10");
+    fontSizeInput.setAttribute("max","50");
+    fontSizeInput.setAttribute("step","1");
+    fontSizeInput.setAttribute("value",map.getLayoutProperty(layerID + "-point-label","text-size"));
+    fontSizeInput.addEventListener("input",function(e){
+        map.setLayoutProperty(layerID + "-point-label","text-size",Number(fontSizeInput.value));
+        $("#" + layerID + "-label-font-size").innerText = fontSizeInput.value + "px";
+    });
+    div4.append(fontSizeLabel,fontSizeInput);
+    //--------------------------
+    const div5 = document.createElement("div");
+    const haloColorLabel = document.createElement("label");
+    haloColorLabel.innerText = "Halo Color";
+    const haloColorInput = document.createElement("input");
+    haloColorInput.setAttribute("type","color");
+    haloColorInput.setAttribute("value",map.getPaintProperty(layerID + "-point-label","text-halo-color"));
+    haloColorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-point-label","text-halo-color",haloColorInput.value);
+    });
+    div5.append(haloColorLabel,haloColorInput);
+    //-------------------------------
+    const div6 = document.createElement("div");
+    const colorLabel = document.createElement("label");
+    colorLabel.innerText = "Label Color";
+    const colorInput = document.createElement("input");
+    colorInput.setAttribute("type","color");
+    colorInput.setAttribute("value",map.getPaintProperty(layerID + "-point-label","text-color"));
+    colorInput.addEventListener("input",function(e){
+        map.setPaintProperty(layerID + "-point-label","text-color",colorInput.value);
+    });
+    div6.append(colorLabel,colorInput);
+    //------------------------------- 
+    container.append(div6,div2,div5,div4,div1,div3);
+}
+
+const selectBasemap = $("#select-basemap");
+selectBasemap.addEventListener("change",function(e){
+    const basemap = e.target.value;
+    map.setStyle("mapbox://styles/mapbox/" + basemap);
+});
+
+checkbox3D.addEventListener("click",function(e){
+    if (e.target.checked){
+        add3D();
+    }
+    else {
+        remove3D();
+    }
+});
+
+function add3D(){
+    map.addSource("mapbox-dem", {
+        "type": "raster-dem",
+        "url": "mapbox://mapbox.mapbox-terrain-dem-v1",
+        "tileSize": 512,
+        "maxzoom": 14
+    });
+    map.setTerrain({"source": "mapbox-dem","exaggeration": 1.5});  
+    map.addLayer({
+        "id": "sky",
+        "type": "sky",
+        "paint": {
+            "sky-type": "gradient",
+        }
+    });
+}
+
+function remove3D(){
+    map.removeLayer("sky");
+    map.setTerrain(null);
+    map.removeSource("mapbox-dem");
+}
+
+map.on("styledata", function() {
+    if (checkbox3D.checked && !map.getSource("mapbox-dem")){
+        add3D();
+    }
+    globalStyleArray.forEach(function(item){
+        const id = item.source.slice(0,-7);
+        const geoJson = globalOverlayGeoJson.filter(x => x.pdfmmid === id)[0];
+        if (!map.getSource(item.source)){
+            map.addSource(item.source, {
+                "type": "geojson",
+                "data": geoJson
+            });
+        }
+        if (!map.getLayer(item.id)){
+            map.addLayer(item);
+        }
+    });
+    globalStyleArray = map.getStyle().layers.filter(x => x.id.substring(0,5) === "PDFMM");
+});
+
+const selectLayout = $("#select-layout");
+selectLayout.addEventListener("change",function(e){
+    const layout = e.target.value;
+    if (layout === "l-letter"){
+        pageContainer.style.width = "1000px";
+        mapContainer.style.height = "597px";
+    }
+    if (layout === "p-letter"){
+        pageContainer.style.width = "750px";
+        mapContainer.style.height = "847px";
+    }
+    if (layout === "l-tabloid"){
+        pageContainer.style.width = "1600px";
+        mapContainer.style.height = "847px";
+    }
+    if (layout === "p-tabloid"){
+        pageContainer.style.width = "1000px";
+        mapContainer.style.height = "1447px";
+    }
+    map.resize();
+    updateLegend();
+});
+
+const base64NorthArrows = [
+    "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",
+];
+
+function buildNorthArrow(doc,northArrow,pageWidth,pageHeight){
+    const sx = pageWidth - 1.6;
+    const sy = pageHeight - 1.95;
+    const a = 1;
+    const r = Math.round(map.getBearing());
+    const rad = (r - 45) * (Math.PI / 180);
+    const h = Math.sqrt(Math.pow(a / 2,2) + Math.pow(a / 2,2));
+    let i = (a / 2) / Math.cos(rad);
+    let x = r / 90 + sx;
+    let y = (h - i) + sy;
+    if (r > 90){
+        i = (a / 2) / Math.sin(rad);
+        x = (h - i) + sx + 1;
+        y = sy - (r - 90) / 90;
+    }
+    if (r < 0){
+        i = (a / 2) / Math.sin(rad);
+        x = (h - i) + sx - 1.42;
+        y = r / 90 + sy;
+    }
+    if (r < -90){
+        i = (a / 2) / Math.cos(rad);
+        x = sx - (r + 90) / 90 - 0.02;
+        y = (h - i) + sy - 2.42;
+    }
+    doc.addImage(northArrow,"base64",x,y,a,a,null,null,r);
+}
+
+function buildScaleBar(doc,pageHeight,pageWidth){
+    const width = scaleBarContainer.childNodes[0].style.width.slice(0,-2); 
+    const text = scaleBarContainer.childNodes[0].innerText;
+    const w = (pageWidth - 0.7) - (Number(width) / 100);
+    doc.setLineWidth(0.015);
+    doc.line(w,pageHeight - 0.705,pageWidth - 0.7,pageHeight - 0.705);
+    doc.line(w,pageHeight - 0.9,w,pageHeight - 0.7);
+    doc.line(pageWidth - 0.7,pageHeight - 0.9,pageWidth - 0.7,pageHeight - 0.7);
+    doc.text(text,pageWidth - 0.7,pageHeight - 0.75,{align:"right"});
+}
+
+async function createCanvasList(){
+    const nodes = titleBlockLegend.childNodes;
+    let canvasURLs = [];
+    for (let node of nodes){
+        const svg = new XMLSerializer().serializeToString(node.childNodes[0]);
+        const svg64 = btoa(svg);
+        const image64 = "data:image/svg+xml;base64," + svg64;
+        const url = await getDataUrl(image64);
+        canvasURLs.push(url);
+    }
+    return canvasURLs;
+}
+
+function getDataUrl(src) {
+    return new Promise(function(resolve){
+        const img = new Image();
+        img.src = src;
+        img.onload = function(){
+            const canvas = document.createElement("canvas");
+            canvas.height = "16";
+            canvas.width = "22";
+            canvas.getContext("2d").drawImage(img, 0, 0);
+            resolve(canvas.toDataURL());
+        }
+    });
+}
+
+const buttonDownloadMap = $("#dowload-map");
+buttonDownloadMap.addEventListener("click",function(){
+    const subtitleArray = [titleBody1.innerText,titleBody2.innerText,titleBody3.innerText,titleBody4.innerText];
+    const str = northArrow.src.toString();
+    const strlen = str.length;
+    const numb = str.substr(strlen - 5, 1);
+    if (selectLayout.value === "p-letter"){
+        generatePDF("letter","p",11,8.5,titleMain.innerText,subtitleArray,base64NorthArrows[numb - 1]);
+    }
+    if (selectLayout.value === "l-letter"){
+        generatePDF("letter","l",8.5,11,titleMain.innerText,subtitleArray,base64NorthArrows[numb - 1]);
+    }
+    if (selectLayout.value === "p-tabloid"){
+        generatePDF("tabloid","p",17,11,titleMain.innerText,subtitleArray,base64NorthArrows[numb - 1]);
+    }
+    if (selectLayout.value === "l-tabloid"){
+        generatePDF("tabloid","l",11,17,titleMain.innerText,subtitleArray,base64NorthArrows[numb -1]);
+    }
+});
+
+async function generatePDF(layout,orientation,pageHeight,pageWidth,title,subTitleArray,northArrow){
+    const doc = new jsPDF(orientation,"in",layout);
+    const img = map.getCanvas().toDataURL();
+    doc.addImage(img,"base64",0.5,0.5,pageWidth - 1,pageHeight - 2.5);
+    buildNorthArrow(doc,northArrow,pageWidth,pageHeight);
+    doc.setLineWidth(0.02);
+    doc.rect(0.5, 0.5, pageWidth - 1, pageHeight - 1);
+    doc.line(0.5,pageHeight - 2,pageWidth - 0.5,pageHeight - 2);
+    let start = pageHeight - 1.5;
+    const lineHeight = 0.2;
+    const pageCenter = pageWidth / 2;
+    doc.setFontSize(16);
+    doc.setFontStyle("bold");
+    doc.text(title,pageCenter,start - 0.25,{align:"center"});
+    doc.setFontStyle("normal");
+    doc.setFontSize(12);
+    subTitleArray.forEach(function(item){
+        doc.text(item,pageCenter,start,{align:"center"});
+        start = start + lineHeight;
+    });
+    doc.setFontSize(10);
+    buildScaleBar(doc,pageHeight,pageWidth);
+    let patchStart = pageHeight - 1.54;
+    const patchlineHeight = 0.24;
+    const canvasURLs = await createCanvasList();
+    const titleBlockItems = titleBlockLegend.childNodes;
+    titleBlockItems.forEach(function(item,index){
+        if (index < 6){
+            const text = item.childNodes[1].textContent;
+            doc.text(text.trim(),0.9,patchStart - 0.25);
+            doc.addImage(canvasURLs[index],"base64",0.6, patchStart - 0.38);
+            patchStart = patchStart + patchlineHeight;
+        }
+    });
+    doc.setFontSize(8);
+    doc.text("Source: Mapbox, OpenStreetMap",pageCenter,pageHeight - 0.6,{align:"center"});
+    const timeStamp = new Date();
+    doc.setFontSize(5);
+    doc.setTextColor("#aaaaaa");
+    doc.text("Created with PDF Map Maker on: " + timeStamp,pageWidth - 0.4,pageHeight - 0.5,{angle:90});
+    doc.save(title.trim() + ".pdf");
+};
+
+function setupMap(){
+    const previousMapDetails = localStorage.getItem("pdfmm-map-details");
+    if (previousMapDetails != undefined){
+        const openPreviousMap = confirm("Recover your map from the last time?");
+        if (openPreviousMap){
+            const data = JSON.parse(previousMapDetails);
+            map.setStyle(data.style);
+            map.setCenter([data.center.lng,data.center.lat]);
+            map.setZoom(data.zoom);
+            map.setPitch(data.pitch);
+            map.setBearing(data.bearing);
+            selectBasemap.value = data.basemap;
+            selectLayout.value = data.layout;
+            const changeEvent = new Event("change");
+            selectLayout.dispatchEvent(changeEvent);
+            if (data.is3D){
+                checkbox3D.checked = true;
+            }
+            scaleBar.setUnit(data.scaleUnit);
+            for (let i = 0; i < scaleBarRadioButtons.length; i++){
+                scaleBarRadioButtons[i].checked = false;
+                if (scaleBarRadioButtons[i].value === data.scaleUnit){
+                    scaleBarRadioButtons[i].checked = true;
+                }
+            }
+            northArrow.src = "assets/" + data.northArrow;
+            for (let i = 0; i < northArrowChoices.length; i++){
+                northArrowChoices[i].style.background = "#fff";
+            }
+            const p = data.northArrow.slice(data.northArrow.length - 5,data.northArrow.length - 4);
+            const i = Number(p) - 1;
+            northArrowChoices[i].style.background = "#ccc";
+            map.on("load",function(){
+                const sources = globalStyleArray.map(x => x.source);
+                const uniqueSources = [...new Set(sources)];
+                uniqueSources.forEach(function(item){
+                    globalOverlayGeoJson.push(map.getSource(item)._data);
+                });
+                globalOverlayGeoJson.forEach(function(item){
+                    createLayerListItem(item.pdfmmName,item.features[0].geometry.type,item.pdfmmid);
+                });
+            });
+            const titleBlockContentString = localStorage.getItem("pdfmm-map-title");
+            titleBlockContent = JSON.parse(titleBlockContentString);
+            titleMain.innerText = titleBlockContent.main;
+            titleMainInput.value = titleBlockContent.main;
+            titleBody1.innerText = titleBlockContent.body1;
+            titleBodyInput1.value = titleBlockContent.body1;
+            titleBody2.innerText = titleBlockContent.body2;
+            titleBodyInput2.value = titleBlockContent.body2;
+            titleBody3.innerText = titleBlockContent.body3;
+            titleBodyInput3.value = titleBlockContent.body3;
+            titleBody4.innerText = titleBlockContent.body4;
+            titleBodyInput4.value = titleBlockContent.body4;
+        }
+    }
+    localStorage.removeItem("pdfmm-map-details");
+    localStorage.removeItem("pdfmm-map-title");
+}
+setupMap();
+</script>
+
+</body>
+</html>
