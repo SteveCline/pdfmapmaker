@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="PDF Map Maker">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
-<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css">
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.css">
 <style>
     body { 
         margin: 0;
@@ -121,7 +121,7 @@
         grid-template-columns: auto;
         margin: auto;
         margin-top: 150px;
-        margin-bottom: 150px;
+        margin-bottom: 75px;
         background: #fff;
         padding: 50px;
         width: 750px;
@@ -384,6 +384,10 @@
             </div>
         </div>
     </div>
+    <div style="text-align:center;margin:75px 0;">
+        <a href="https://github.com/sponsors/SteveCline" target="_blank">Sponsor this project</a>
+    </div>
+    
 </main>
 <!-- Title Modal -->
 <div class="modal" id="title-modal">
@@ -448,12 +452,13 @@
             <h2>Print Ain't Dead Yet!</h2>
             <p>Let's face it, we still need paper and PDF maps. Meet the web's best PDF Map Maker. Pick a layout, pick a basemap, add your own geoJSON data, style it, add a title and download a PDF map to print. Need to create some data to use on your map? Use my free editor <a href="https://vector.rocks/" target="_blank">vector.rocks</a> to create and download your own geo-data.</p>
             <p>PDF Map Maker is a project created and maintained by <a href="https://stevecline.github.io/me/" target="_blank">Stephen Cline</a>. Hit me up on <a href="https://twitter.com/SteveClineBird" target="_blank">Twitter</a> to share the cool maps you make!</p>
+            <p>Like this? Please consider <a href="https://github.com/sponsors/SteveCline" target="_blank">sponsoring</a> my work.</p>
             <button class="close-modal">Close</button>
 		</div>
 	</div>
 </div>
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.js"></script>
 <script src="assets/jspdf.js"></script>
 
 <script>
@@ -466,6 +471,7 @@ const map = new mapboxgl.Map({
     maxZoom: 21,
     minZoom: 1,
     accessToken: "pk.eyJ1Ijoic3RldmVjIiwiYSI6ImNrdW5mMDR3bTQxZGMydm56cjE3cXBrMm4ifQ.voV5ESfCC0W0d4rQwCOhKA",
+    cooperativeGestures: true,
     preserveDrawingBuffer: true,
     attributionControl: false
 });
@@ -1807,6 +1813,5 @@ function setupMap(){
 }
 setupMap();
 </script>
-
 </body>
 </html>
